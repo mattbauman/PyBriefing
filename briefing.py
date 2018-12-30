@@ -1,67 +1,54 @@
-import urllib.request
-import xml.etree.ElementTree
+import news
+import platform
 
-class News:
-    rss=""
-    title=""
-    link=""
-    reel_length = 5
-    reel_title = ["" for x in range(reel_length)]
-    reel_description = ["" for x in range(reel_length)]
-    reel_link = ["" for x in range(reel_length)]
+# BBCUSEndPoint = "http://feeds.bbci.co.uk/news/rss.xml?edition=us";
+# BBCWorldNewsEndPoint = "http://feeds.bbci.co.uk/news/video_and_audio/world/rss.xml";
+# ReutersTopNewsEndPoint = "http://feeds.reuters.com/reuters/topNews";
+# ReutersWorldNewsEndPoint = "http://feeds.reuters.com/Reuters/worldNews";
+# ReutersUSEndPoint = "http://feeds.reuters.com/Reuters/domesticNews";
+# NPRWorldNewsEndPoint = "https://www.npr.org/rss/rss.php?id=1004";
+# PBSWorldNewsEndPoint = "https://www.pbs.org/newshour/feeds/rss/world";
+# StarTribuneLocalNewsEndPoint = "http://www.startribune.com/local/index.rss2";
+# NPRBusiness = news.News("https://www.npr.org/rss/rss.php?id=1006")
+# BBCBusiness = news.News("http://feeds.bbci.co.uk/news/business/rss.xml")
+# ReutersBusiness = news.News("http://feeds.reuters.com/reuters/businessNews")
 
-    def __init__(self, endPoint):
-        self.endPoint = endPoint
-    def get_rss(self):
-        request = urllib.request.urlopen(self.endPoint)
-        response = request.read().decode("utf-8")
-        self.rss=response
-    def parse_xml(self):
-        xml_tree = xml.etree.ElementTree.fromstring(self.rss)
-        i = 0
-        for xml_element in xml_tree:
-            if xml_element.tag=='channel':
-                channel=xml_element
-                for channel_element in channel:
-                    if channel_element.tag=="title":
-                        self.title=channel_element.text
-                    if channel_element.tag=="link":
-                        self.link=channel_element.text
-                    if channel_element.tag=="item" and i<self.reel_length:
-                        item=channel_element
-                        for item_element in item:
-                            if item_element.tag=="title":
-                                self.reel_title[i]=item_element.text
-                            elif item_element.tag=="description":
-                                feedflare_loc = item_element.text.find("<") ##look for beginning of feedflare (Reuters)
-                                if feedflare_loc>0:
-                                    self.reel_description[i] = item_element.text[0:feedflare_loc]
-                                else:
-                                    self.reel_description[i] = item_element.text
-                            elif item_element.tag=="link":
-                                self.reel_link[i] = item_element.text
-                        i+=1
-    def print(self):
-        for i in range(self.reel_length):
-            print(self.title + ' (' + str(i+1) + ')')
-            print(self.link)
-            print(self.reel_title[i])
-            print(self.reel_description[i])
-            print(self.reel_link[i])
-            print()
-            i+=1
+if platform.system() == "Windows":
+    path = "C:/Users/matt/Desktop/mattbauman.com/briefing/"
+elif platform.system() == "Linux":
+    path = "/opt/bitnami/apache2/htdocs/mattbauman.com/briefing/"
+else:
+    path = "error"  # project path
+print(path)
 
-NPRBusiness = News("https://www.npr.org/rss/rss.php?id=1006")
-NPRBusiness.get_rss()
-NPRBusiness.parse_xml()
-NPRBusiness.print()
+news_feed_urls = [
+    "https://www.npr.org/rss/rss.php?id=1006",
+    "http://feeds.bbci.co.uk/news/business/rss.xml",
+    "http://feeds.reuters.com/reuters/businessNews"]
 
-BBCBusiness = News("http://feeds.bbci.co.uk/news/business/rss.xml")
-BBCBusiness.get_rss()
-BBCBusiness.parse_xml()
-BBCBusiness.print()
+news_objects = []
 
-ReutersBusiness = News("http://feeds.reuters.com/reuters/businessNews")
-ReutersBusiness.get_rss()
-ReutersBusiness.parse_xml()
-ReutersBusiness.print()
+
+def get_news(url):
+    news_object = news.News(url)
+    news_object.get_rss()
+    news_object.parse_xml()
+    return news_object
+
+
+for news_feed_url in news_feed_urls:
+    x = get_news(news_feed_url)
+    news_objects.append(x)
+
+for i in range(5):
+    for news_object in news_objects:
+        print("<div class=\"w3-card-4 w3-margin w3-white\">" + news_object.title + ' (' + str(i + 1) + ') ')
+        print("\t<div class=\"w3-container\">")
+        print("\t\t<h5><b><a href=\""
+              + news_object.reel_link[i]
+              + "\" target=\"_blank\">"
+              + news_object.reel_title[i]
+              + "</a></b></h5>")
+        print("\t\t<p>" + news_object.reel_description[i] + "</p>")
+        print("\t</div>")
+        print("</div>")
