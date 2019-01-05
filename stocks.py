@@ -20,6 +20,7 @@ def write_delayed_quote(sym, dt, tm, price):
 
 # https://api.iextrading.com/1.0/stock/VOO/chart
 # https://api.iextrading.com/1.0/stock/VOO/delayed-quote
+# https://api.iextrading.com/1.0/stock/VOO/quote
 # https://api.iextrading.com/1.0/stock/aapl/ohlc  #open/close
 
 # Delayed Quote
@@ -42,17 +43,13 @@ for symbol in ['BND', 'VOO', 'VTI']:
         delayedPriceStr = '${:,.2f}'.format(delayedPrice)
         write_delayed_quote(symbol, delayedPriceDate, delayedPriceTime, delayedPriceStr)
     try:
-        previous = get_json("https://api.iextrading.com/1.0/stock/" + symbol + "/previous")
-        previous_success = True
+        quote = get_json("https://api.iextrading.com/1.0/stock/" + symbol + "/quote?displayPercent=true")
+        quote_success = True
     except:
-        previous_success = False
+        quote_success = False
         print(symbol + ": fail previous")
-    previous_close = previous['close']
-    previous_close_Str = '${:,.2f}'.format(previous_close)
-    print(previous_close_Str)
-    diff = delayedPrice - previous_close
-    diff_percent = diff / previous_close
-    print(round(diff,2))
-    diff_percent_str = str(round(diff_percent * 100, 2)) + "%"
-
-    print(diff_percent_str)
+    if delayed_quote_success and symbol == delayed_quote['symbol']:
+        change = quote['change']
+        changePercent = quote['changePercent']
+        print(change)
+        print(str(round(changePercent, 2)) + "%")
