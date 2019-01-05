@@ -2,6 +2,10 @@ import urllib.request
 import json
 import time
 import datetime
+import platform
+import os
+
+symbols = ['BND', 'VOO', 'VTI']
 
 
 def get_json(url):
@@ -10,29 +14,49 @@ def get_json(url):
     return json.loads(response)
 
 
-def write_delayed_quote(sym, dt, tm, price):
-    print(sym)
-    print(dt)
-    print(tm)
-    print(price)
-    print()
+def write_quote(sym, company, dt, tm, price, chg, chg_p):
+    php_out.write('<div class="w3-card-4 w3-margin w3-white">' +
+                  company + ' (' +
+                  sym + ') ' + ' - <a href="https://iextrading.com/developer/" target="_blank">IEX Trading</a>\n')
+    php_out.write('<div class ="w3-container">\n')
+    php_out.write('<h5><b>' + price + ' ' + chg + ' (' + chg_p + ')' + '</h5></b>\n')
+    php_out.write(dt + " " + tm + '\n')
+    php_out.write('</div>\n')
+    php_out.write('</div>\n')
 
 
-# https://api.iextrading.com/1.0/stock/VOO/chart
-# https://api.iextrading.com/1.0/stock/VOO/delayed-quote
-# https://api.iextrading.com/1.0/stock/VOO/quote
-# https://api.iextrading.com/1.0/stock/aapl/ohlc  #open/close
+if platform.system() == "Linux":
+    path = "/opt/bitnami/apache2/htdocs/mattbauman.com/briefing/"
+else:
+    path = "C:/Users/matt/Desktop"
+
+completeName = os.path.join(path, "stocks.php")
+php_out = open(completeName, "w")
 
 # Delayed Quote
-for symbol in ['BND', 'VOO', 'VTI']:
+quote_success = False
+delayed_quote_success = False
+for symbol in symbols:
+    # Quote
+    try:
+        quote = get_json("https://api.iextrading.com/1.0/stock/" + symbol + "/quote?displayPercent=true")
+        quote_success = True
+    except:
+        print(symbol + ": fail quote")
+
+    # Delayed Quote
     try:
         delayed_quote = get_json("https://api.iextrading.com/1.0/stock/" + symbol + "/delayed-quote")
         delayed_quote_success = True
     except:
-        delayed_quote_success = False
         print(symbol + ": fail delayed_quote")
+    if quote_success and symbol == quote['symbol']:
+        companyName = quote['companyName']
+        change = quote['change']
+        changeStr = str(change)
+        changePercent = quote['changePercent']
+        changePercentStr = str(round(changePercent, 2)) + "%"
     if delayed_quote_success and symbol == delayed_quote['symbol']:
-        print(delayed_quote)
         delayedPrice = delayed_quote['delayedPrice']
         delayedPriceTimeStr = str(delayed_quote['delayedPriceTime'])
         delayedPriceTimeInt = int(delayedPriceTimeStr[0:10])
@@ -41,15 +65,8 @@ for symbol in ['BND', 'VOO', 'VTI']:
         delayedPriceTime = delayedPriceDateTime[11:16]
         delayedPriceTime = datetime.datetime.strptime(delayedPriceTime, '%H:%M').strftime('%I:%M %p')
         delayedPriceStr = '${:,.2f}'.format(delayedPrice)
-        write_delayed_quote(symbol, delayedPriceDate, delayedPriceTime, delayedPriceStr)
     try:
-        quote = get_json("https://api.iextrading.com/1.0/stock/" + symbol + "/quote?displayPercent=true")
-        quote_success = True
+        write_quote(symbol, companyName, delayedPriceDate, delayedPriceTime, delayedPriceStr, changeStr,
+                    changePercentStr)
     except:
-        quote_success = False
-        print(symbol + ": fail previous")
-    if delayed_quote_success and symbol == delayed_quote['symbol']:
-        change = quote['change']
-        changePercent = quote['changePercent']
-        print(change)
-        print(str(round(changePercent, 2)) + "%")
+        print("fail print")

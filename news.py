@@ -12,7 +12,10 @@ class News:
         self.reel_description = []
         self.reel_link = []
 
-
+    def get_rss(self):
+        request = urllib.request.urlopen(self.endPoint)
+        response = request.read().decode("utf-8")
+        self.rss = response
 
     def parse_xml(self):
         xml_tree = xml.etree.ElementTree.fromstring(self.rss)
