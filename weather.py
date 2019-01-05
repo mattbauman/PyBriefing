@@ -13,27 +13,37 @@ def get_json(url):
 
 
 def write_tr(write_date_time, write_weather_main, write_temp):
-    print(
+    php_out.write(
 
-        "          <tr>\r\n" +
-        "            <td>" + write_date_time + "</td>\r\n" +
-        "            <td>" + write_weather_main + "</td>\r\n" +
-        "            <td>" + str(write_temp) + "\u00b0F</td>\r\n" +
-        "          </tr>"
+        "<tr>\n" +
+        "\t<td>" + write_date_time + "</td>\n" +
+        "\t<td>" + write_weather_main + "</td>\n" +
+        "\t<td>" + str(write_temp) + "&#176;F</td>\n" +
+        "</tr>"
+    )
+
+
+def write_current(write_current_date_time, write_current_weather_main, write_current_temp):
+    print(
+        write_current_date_time +
+        write_current_weather_main +
+        str(write_current_temp)
     )
 
 
 def card_start(weekday, yyyy_mm_dd):
-    print('<div class="w3-card-4 w3-margin w3-white">' + 'Weather (Minneapolis)')
-    print('<div class ="w3-container">')
-    print('<h5><b>' + weekday + ', ' + yyyy_mm_dd + '</h5></b>')
-    print('<table>')
+    php_out.write(
+        '<div class="w3-card-4 w3-margin w3-white">' +
+        'Weather (Minneapolis) - <a href="https://openweathermap.org/" target="_blank">OpenWeatherMap</a>\n')
+    php_out.write('<div class ="w3-container">\n')
+    php_out.write('<h5><b>' + weekday + ', ' + yyyy_mm_dd + '</h5></b>\n')
+    php_out.write('<table>\n')
 
 
-def card_end(position):
-    print('</table>')
-    print('</div>')
-    print('</div>')
+def card_end():
+    php_out.write('</table>\n')
+    php_out.write('</div>\n')
+    php_out.write('</div>\n')
 
 
 def get_day_of_week(day_of_week_int):
@@ -61,11 +71,29 @@ else:
 completeName = os.path.join(path, "weather.php")
 php_out = open(completeName, "w")
 request_end_point = "http://api.openweathermap.org/data/2.5"
-request_api_name = "forecast"
+
 request_appid = "d298334de2c10c2ffb1781632245f212"
 request_city = "Minneapolis"
 request_country = "us"
 request_units = "imperial"
+
+# Current Weather
+request_api_name = "weather"
+current_weather = (request_end_point + "/" + request_api_name + "?q=" + request_city + "," + request_country + "&units="
+                   + request_units + "&appid=" + request_appid)
+current_weather_json_response = get_json(current_weather)
+current_weather_json = json.loads(current_weather_json_response)
+current_main = current_weather_json['weather'][0]['main']
+current_temp = current_weather_json['main']['temp']
+current_temp_str = str(round(float(current_temp)))
+current_wind_speed = current_weather_json['wind']['speed']
+current_dt_int = current_weather_json['dt']
+current_dt_tm_formatted = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(current_dt_int))
+current_date_str = str(current_dt_tm_formatted)[0:10]
+current_time_str = str(current_dt_tm_formatted)[11:16]
+current_time_str = datetime.datetime.strptime(current_time_str, '%H:%M').strftime('%I:%M %p')
+
+request_api_name = "forecast"
 # "http://api.openweathermap.org/data/2.5/forecast?q=Minneapolis,us&units=imperial&appid=d298334de2c10c2ffb1781632245f212"
 request = (request_end_point + "/" + request_api_name + "?q=" + request_city + "," + request_country + "&units="
            + request_units + "&appid=" + request_appid)
@@ -88,10 +116,11 @@ for weather_json_object in weather_json['list']:
 
     if date_last == "":  # first
         card_start(date_weekday, date_str)
+        if current_date_str == date_str:
+            write_tr(current_time_str, current_main, current_temp_str)
     elif date_last != date_str:
         card_end()
         card_start(date_weekday, date_str)
-        write_tr(time_str, weather_main, temp)
-    else:
-        write_tr(time_str, weather_main, temp)
+    write_tr(time_str, weather_main, temp)
     date_last = date_str
+card_end()
