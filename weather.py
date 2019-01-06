@@ -66,12 +66,12 @@ def get_day_of_week(day_of_week_int):
 if platform.system() == "Linux":
     path = "/opt/bitnami/apache2/htdocs/mattbauman.com/briefing/"
 else:
-    path = "C:/Users/matt/Desktop"
+    path = "C:/Users/matt/Documents/GitHub/PyBriefing/"
 
 completeName = os.path.join(path, "weather.php")
 php_out = open(completeName, "w")
 request_end_point = "http://api.openweathermap.org/data/2.5"
-OpenWeatherMap_key = open("OpenWeatherMap_key.txt", "r")
+OpenWeatherMap_key = open(path + "OpenWeatherMap_key.txt", "r")
 request_appid = OpenWeatherMap_key.read()
 request_city = "Minneapolis"
 request_country = "us"

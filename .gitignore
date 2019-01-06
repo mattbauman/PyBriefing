@@ -2,3 +2,4 @@
 __pycache__/
 OpenWeatherMap_key.txt
 test.py
+*.php
