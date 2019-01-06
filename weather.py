@@ -71,8 +71,8 @@ else:
 completeName = os.path.join(path, "weather.php")
 php_out = open(completeName, "w")
 request_end_point = "http://api.openweathermap.org/data/2.5"
-
-request_appid = "d298334de2c10c2ffb1781632245f212"
+OpenWeatherMap_key = open("OpenWeatherMap_key.txt", "r")
+request_appid = OpenWeatherMap_key.read()
 request_city = "Minneapolis"
 request_country = "us"
 request_units = "imperial"
